@@ -15,12 +15,11 @@ export default function SignUpPage(): React.ReactElement {
           <h1 className="text-2xl font-semibold text-zinc-50" id="signup-title">
             Create your account
           </h1>
-          <p className="text-sm text-zinc-400 mt-1.5">
-            Get started with production-ready authentication
-          </p>
         </div>
         <SignUpForm />
       </div>
     </main>
   )
 }
+
+

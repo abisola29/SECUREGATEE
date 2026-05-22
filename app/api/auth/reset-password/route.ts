@@ -56,7 +56,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ResetPassword
       }),
     ])
 
-    return NextResponse.json({ success: true }, { status: 200 })
+    return NextResponse.json({ success: true, email: resetToken.email }, { status: 200 })
   } catch (error) {
     console.error('[RESET_PASSWORD]', error)
     return NextResponse.json(

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { signIn } from 'next-auth/react'
 
 import Spinner from '@/components/ui/spinner'
 import PasswordStrength from '@/components/auth/password-strength'
@@ -49,15 +50,33 @@ export default function ResetPasswordForm({
         body: JSON.stringify({ token, password }),
       })
 
-      const data: { success: boolean; error?: string } = await res.json()
+      const data: { success: boolean; email?: string; error?: string } = await res.json()
 
       if (!data.success) {
         setError(data.error ?? 'Something went wrong.')
         return
       }
 
-      setSuccess('Password reset successfully! Redirecting to login...')
-      setTimeout(() => router.push('/login'), 2000)
+      setSuccess('Password reset successfully! Logging you in...')
+
+      // Perform automatic sign in
+      if (data.email) {
+        const loginResult = await signIn('credentials', {
+          email: data.email,
+          password,
+          redirect: false,
+        })
+
+        if (loginResult?.error) {
+          setError('Password reset but auto-login failed. Please sign in manually.')
+          return
+        }
+
+        router.push('/dashboard')
+        router.refresh()
+      } else {
+        router.push('/login')
+      }
     } catch {
       setError('Something went wrong. Please try again later.')
     } finally {
@@ -123,7 +142,18 @@ export default function ResetPasswordForm({
         {isLoading ? <Spinner /> : 'Reset Password'}
       </button>
 
-      <p className="text-center text-sm text-zinc-400">
+      {error && (error.includes('expired') || error.includes('invalid')) && (
+        <div className="mt-4 text-center">
+          <Link
+            href="/forgot-password"
+            className="inline-flex w-full justify-center rounded-lg bg-zinc-800 px-4 py-2.5 text-sm font-semibold text-zinc-50 hover:bg-zinc-700 transition-colors duration-150"
+          >
+            Resend Link
+          </Link>
+        </div>
+      )}
+
+      <p className="text-center text-sm text-zinc-400 mt-2">
         <Link href="/login" className="auth-link">
           Back to login
         </Link>

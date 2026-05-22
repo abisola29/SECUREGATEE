@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { signIn } from 'next-auth/react'
@@ -14,11 +14,22 @@ export default function LoginForm(): React.ReactElement {
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('verified') === 'true') {
+        setSuccess('Email successfully verified! Please sign in to access your dashboard.')
+      }
+    }
+  }, [])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault()
     setError('')
+    setSuccess('')
     setFieldErrors({})
 
     const parsed = loginSchema.safeParse({ email, password })
@@ -45,7 +56,11 @@ export default function LoginForm(): React.ReactElement {
       })
 
       if (result?.error) {
-        setError('Invalid email or password.')
+        if (result.error.includes('Too many attempts')) {
+          setError(result.error)
+        } else {
+          setError('Invalid email or password.')
+        }
         return
       }
 
@@ -63,6 +78,12 @@ export default function LoginForm(): React.ReactElement {
       {error && (
         <div className="rounded-lg bg-red-950 border border-red-800 px-4 py-3">
           <p className="auth-error" role="alert" aria-live="polite">{error}</p>
+        </div>
+      )}
+
+      {success && (
+        <div className="rounded-lg bg-emerald-950 border border-emerald-800 px-4 py-3">
+          <p className="auth-success" role="alert" aria-live="polite">{success}</p>
         </div>
       )}
 

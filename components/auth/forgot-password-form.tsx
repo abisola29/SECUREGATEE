@@ -1,16 +1,47 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
 import Spinner from '@/components/ui/spinner'
 import { forgotPasswordSchema } from '@/lib/validations/auth'
+
+const isDev = process.env.NODE_ENV !== 'production'
+const INITIAL_COUNTDOWN = isDev ? 10 : 600 // 10 seconds for dev testing, 10 minutes for prod
 
 export default function ForgotPasswordForm(): React.ReactElement {
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [countdown, setCountdown] = useState(INITIAL_COUNTDOWN)
+  const [isResendVisible, setIsResendVisible] = useState(false)
+
+  useEffect(() => {
+    if (!success) return
+
+    setCountdown(INITIAL_COUNTDOWN)
+    setIsResendVisible(false)
+
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval)
+          setIsResendVisible(true)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [success])
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault()
@@ -57,8 +88,26 @@ export default function ForgotPasswordForm(): React.ReactElement {
       )}
 
       {success && (
-        <div className="rounded-lg bg-emerald-950 border border-emerald-800 px-4 py-3">
-          <p className="auth-success" role="alert" aria-live="polite">{success}</p>
+        <div className="flex flex-col gap-3">
+          <div className="rounded-lg bg-emerald-950 border border-emerald-800 px-4 py-3">
+            <p className="auth-success" role="alert" aria-live="polite">{success}</p>
+          </div>
+          {isResendVisible ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                handleSubmit(e as unknown as React.FormEvent<HTMLFormElement>);
+              }}
+              disabled={isLoading}
+              className="text-sm text-indigo-400 hover:text-indigo-300 underline-offset-4 hover:underline disabled:opacity-50"
+            >
+              Didn't see link? Resend
+            </button>
+          ) : (
+            <p className="text-xs text-zinc-500 text-center font-medium">
+              Didn't get the email? Resend available in {formatTime(countdown)}
+            </p>
+          )}
         </div>
       )}
 

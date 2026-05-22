@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs'
 
 import { prisma } from '@/lib/prisma'
 import { loginSchema } from '@/lib/validations/auth'
+import { rateLimit } from '@/lib/rate-limit'
 
 export const authOptions: NextAuthOptions = {
   session: {
@@ -21,12 +22,20 @@ export const authOptions: NextAuthOptions = {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
-      async authorize(credentials): Promise<{
+      async authorize(credentials, req): Promise<{
         id: string
         name: string
         email: string
         emailVerified: Date | null
       } | null> {
+        const ip = req?.headers?.['x-forwarded-for'] || 'unknown'
+        const rateLimitResult = await rateLimit(`login:${ip}`)
+
+        if (!rateLimitResult.success) {
+          const minutes = Math.ceil(rateLimitResult.resetInMs / 60000)
+          throw new Error(`Too many attempts. Please try again in ${minutes} minutes.`)
+        }
+
         const parsed = loginSchema.safeParse(credentials)
 
         if (!parsed.success) {
@@ -62,6 +71,17 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id
         token.emailVerified = (user as { emailVerified: Date | null }).emailVerified
       }
+
+      if (token.email && !token.emailVerified) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: token.email },
+          select: { emailVerified: true },
+        })
+        if (dbUser?.emailVerified) {
+          token.emailVerified = dbUser.emailVerified
+        }
+      }
+
       return token
     },
     async session({ session, token }) {
