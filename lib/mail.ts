@@ -1,15 +1,29 @@
-import * as Brevo from '@getbrevo/brevo'
-
 const BASE_URL = process.env.NEXTAUTH_URL || 'http://localhost:3000'
 const isDev = process.env.NODE_ENV !== 'production'
+const BREVO_API_KEY = process.env.BREVO_API_KEY ?? ''
+// Use the email address you verified as a single sender in your Brevo dashboard
+const SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL ?? 'abisolaayantunji2004@gmail.com'
 
-function getBrevoInstance(): Brevo.TransactionalEmailsApi {
-  const apiInstance = new Brevo.TransactionalEmailsApi()
-  const apiKey = process.env.BREVO_API_KEY?.trim()
-  if (apiKey) {
-    apiInstance.setApiKey(Brevo.TransactionalEmailsApiApiKeys.apiKey, apiKey)
+async function sendEmail(to: string, subject: string, html: string): Promise<void> {
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      accept: 'application/json',
+      'api-key': BREVO_API_KEY,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      sender: { name: 'SecureGate', email: SENDER_EMAIL },
+      to: [{ email: to }],
+      subject,
+      htmlContent: html,
+    }),
+  })
+
+  if (!response.ok) {
+    const errorBody = await response.text()
+    throw new Error(`Brevo API error ${response.status}: ${errorBody}`)
   }
-  return apiInstance
 }
 
 export async function sendVerificationEmail(
@@ -24,30 +38,26 @@ export async function sendVerificationEmail(
   }
 
   try {
-    const apiInstance = getBrevoInstance()
-
-    const sendSmtpEmail = new Brevo.SendSmtpEmail()
-    sendSmtpEmail.sender = { name: 'SecureGate', email: 'no-reply@securegatee.vercel.app' }
-    sendSmtpEmail.to = [{ email }]
-    sendSmtpEmail.subject = 'Verify your email — SecureGate'
-    sendSmtpEmail.htmlContent = `
-      <div style="font-family: Inter, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 24px;">
-        <h1 style="font-size: 24px; font-weight: 700; color: #fafafa; margin-bottom: 16px;">
-          Verify your email
-        </h1>
-        <p style="font-size: 14px; color: #a1a1aa; line-height: 1.6; margin-bottom: 24px;">
-          Click the button below to verify your email address. This link expires in 15 minutes.
-        </p>
-        <a href="${verifyUrl}" style="display: inline-block; background: #4f46e5; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600;">
-          Verify Email
-        </a>
-        <p style="font-size: 12px; color: #71717a; margin-top: 32px;">
-          If you didn't create an account, you can safely ignore this email.
-        </p>
-      </div>
-    `
-
-    await apiInstance.sendTransacEmail(sendSmtpEmail)
+    await sendEmail(
+      email,
+      'Verify your email — SecureGate',
+      `
+        <div style="font-family: Inter, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 24px;">
+          <h1 style="font-size: 24px; font-weight: 700; color: #18181b; margin-bottom: 16px;">
+            Verify your email
+          </h1>
+          <p style="font-size: 14px; color: #71717a; line-height: 1.6; margin-bottom: 24px;">
+            Click the button below to verify your email address. This link expires in 15 minutes.
+          </p>
+          <a href="${verifyUrl}" style="display: inline-block; background: #4f46e5; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600;">
+            Verify Email
+          </a>
+          <p style="font-size: 12px; color: #a1a1aa; margin-top: 32px;">
+            If you didn't create an account, you can safely ignore this email.
+          </p>
+        </div>
+      `
+    )
     console.log('[MAIL] Verification email sent via Brevo to:', email)
   } catch (err) {
     // In development, a failed email send is non-fatal — the link is already logged above.
@@ -69,30 +79,26 @@ export async function sendPasswordResetEmail(
   }
 
   try {
-    const apiInstance = getBrevoInstance()
-
-    const sendSmtpEmail = new Brevo.SendSmtpEmail()
-    sendSmtpEmail.sender = { name: 'SecureGate', email: 'no-reply@securegatee.vercel.app' }
-    sendSmtpEmail.to = [{ email }]
-    sendSmtpEmail.subject = 'Reset your password — SecureGate'
-    sendSmtpEmail.htmlContent = `
-      <div style="font-family: Inter, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 24px;">
-        <h1 style="font-size: 24px; font-weight: 700; color: #fafafa; margin-bottom: 16px;">
-          Reset your password
-        </h1>
-        <p style="font-size: 14px; color: #a1a1aa; line-height: 1.6; margin-bottom: 24px;">
-          Click the button below to reset your password. This link expires in 1 hour.
-        </p>
-        <a href="${resetUrl}" style="display: inline-block; background: #4f46e5; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600;">
-          Reset Password
-        </a>
-        <p style="font-size: 12px; color: #71717a; margin-top: 32px;">
-          If you didn't request a password reset, you can safely ignore this email.
-        </p>
-      </div>
-    `
-
-    await apiInstance.sendTransacEmail(sendSmtpEmail)
+    await sendEmail(
+      email,
+      'Reset your password — SecureGate',
+      `
+        <div style="font-family: Inter, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 24px;">
+          <h1 style="font-size: 24px; font-weight: 700; color: #18181b; margin-bottom: 16px;">
+            Reset your password
+          </h1>
+          <p style="font-size: 14px; color: #71717a; line-height: 1.6; margin-bottom: 24px;">
+            Click the button below to reset your password. This link expires in 1 hour.
+          </p>
+          <a href="${resetUrl}" style="display: inline-block; background: #4f46e5; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600;">
+            Reset Password
+          </a>
+          <p style="font-size: 12px; color: #a1a1aa; margin-top: 32px;">
+            If you didn't request a password reset, you can safely ignore this email.
+          </p>
+        </div>
+      `
+    )
     console.log('[MAIL] Password reset email sent via Brevo to:', email)
   } catch (err) {
     if (!isDev) throw err
