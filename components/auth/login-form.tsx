@@ -36,6 +36,9 @@ export default function LoginForm(): React.ReactElement {
       if (params.get('verified') === 'true') {
         setSuccess('Email successfully verified! Please sign in to access your dashboard.')
       }
+      if (params.get('reset') === 'true') {
+        setSuccess('Password reset successfully! Please sign in with your new password.')
+      }
     }
   }, [])
 

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { signIn } from 'next-auth/react'
+
 
 import Spinner from '@/components/ui/spinner'
 import PasswordStrength from '@/components/auth/password-strength'
@@ -71,26 +71,11 @@ export default function ResetPasswordForm({
         return
       }
 
-      setSuccess('Password reset successfully! Logging you in...')
+      setSuccess('Password reset successfully! Please sign in with your new password.')
 
-      // Perform automatic sign in
-      if (data.email) {
-        const loginResult = await signIn('credentials', {
-          email: data.email,
-          password,
-          redirect: false,
-        })
-
-        if (loginResult?.error) {
-          setError('Password reset but auto-login failed. Please sign in manually.')
-          return
-        }
-
-        router.push('/dashboard')
-        router.refresh()
-      } else {
-        router.push('/login')
-      }
+      setTimeout(() => {
+        router.push('/login?reset=true')
+      }, 1500)
     } catch {
       setError('Something went wrong. Please try again later.')
     } finally {
