@@ -109,11 +109,6 @@ export default function SignUpForm(): React.ReactElement {
         </div>
       )}
 
-      {success && (
-        <div className="rounded-lg bg-emerald-950 border border-emerald-800 px-4 py-3">
-          <p className="auth-success" role="alert" aria-live="polite">{success}</p>
-        </div>
-      )}
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="name" className="auth-label">
@@ -205,23 +200,32 @@ export default function SignUpForm(): React.ReactElement {
         {isLoading ? <Spinner /> : 'Create Account'}
       </button>
 
-      {/* Resend Link Section below Create Account button */}
-      <div className="text-center flex flex-col gap-2 mt-1">
-        <button
-          type="button"
-          onClick={handleResend}
-          disabled={isResending}
-          className="text-sm text-indigo-450 hover:text-indigo-300 underline-offset-4 hover:underline disabled:opacity-50"
-          id="resend-verification-btn"
-        >
-          {isResending ? 'Resending...' : "Didn't get a verification message? Resend"}
-        </button>
-        {resendMessage && (
-          <p className="text-xs text-emerald-450 font-medium" role="status" aria-live="polite">
-            {resendMessage}
-          </p>
-        )}
-      </div>
+      {success && (
+        <div className="flex flex-col gap-3 mt-2 animate-fadeIn">
+          <div className="rounded-lg bg-emerald-950 border border-emerald-800 px-4 py-3">
+            <p className="auth-success" role="alert" aria-live="polite">{success}</p>
+          </div>
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={isResending}
+              className="text-sm text-indigo-400 hover:text-indigo-300 underline-offset-4 hover:underline disabled:opacity-50 text-left"
+              id="resend-verification-btn"
+            >
+              {isResending ? 'Resending...' : "Didn't get the email? Resend message"}
+            </button>
+            <Link href="/login" className="text-sm auth-link">
+              Go to login
+            </Link>
+          </div>
+          {resendMessage && (
+            <p className="text-sm text-zinc-400" role="status" aria-live="polite">
+              {resendMessage}
+            </p>
+          )}
+        </div>
+      )}
 
       <p className="text-center text-sm text-zinc-400 mt-2">
         Already have an account?{' '}
