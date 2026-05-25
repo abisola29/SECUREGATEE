@@ -126,6 +126,11 @@ export default function SignUpForm(): React.ReactElement {
           disabled={isLoading || !!success}
           autoComplete="name"
         />
+        {name.length === 1 && (
+          <p className="text-xs text-red-400 mt-1" role="alert">
+            Please input 2 or more characters
+          </p>
+        )}
         {fieldErrors.name && (
           <p id="name-error" className="auth-error" role="alert" aria-live="polite">
             {fieldErrors.name}
@@ -143,7 +148,7 @@ export default function SignUpForm(): React.ReactElement {
           name="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
+          placeholder="you@gmail.com"
           className="auth-input"
           aria-describedby="email-error"
           disabled={isLoading || !!success}
@@ -183,6 +188,39 @@ export default function SignUpForm(): React.ReactElement {
             <EyeIcon open={showPassword} />
           </button>
         </div>
+        
+        {/* Dynamic Requirement Checklist */}
+        {password.length > 0 && !(
+          password.length >= 8 &&
+          /[^A-Za-z0-9]/.test(password) &&
+          /\d/.test(password) &&
+          /[A-Z]/.test(password)
+        ) && (
+          <div className="mt-2 p-3 bg-zinc-950 border border-zinc-800 rounded-lg flex flex-col gap-1.5">
+            <p className="text-xs font-medium text-zinc-400 mb-1">Password Requirements:</p>
+            <div className="flex items-center gap-2 text-xs">
+              <span className={password.length >= 8 ? 'text-emerald-400' : 'text-red-400'}>
+                {password.length >= 8 ? '✓' : '•'} Password must be at least 8 characters
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <span className={/[^A-Za-z0-9]/.test(password) ? 'text-emerald-400' : 'text-red-400'}>
+                {/[^A-Za-z0-9]/.test(password) ? '✓' : '•'} Password must have a special character
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <span className={/\d/.test(password) ? 'text-emerald-400' : 'text-red-400'}>
+                {/\d/.test(password) ? '✓' : '•'} Password must have a number
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <span className={/[A-Z]/.test(password) ? 'text-emerald-400' : 'text-red-400'}>
+                {/[A-Z]/.test(password) ? '✓' : '•'} Password must have an uppercase letter
+              </span>
+            </div>
+          </div>
+        )}
+
         <PasswordStrength password={password} />
         {fieldErrors.password && (
           <p id="password-error" className="auth-error" role="alert" aria-live="polite">
