@@ -1,3 +1,26 @@
+# SecureGate — Reflection & Engineering Analysis
+**Name:** [Ayantunji Abisola Olufunke]
+**Cohort:** Design to MVP Bootcamp
+**Live URL:** [https://securegatee.vercel.app/]
+**GitHub Repo:** [https://github.com/abisola29/SECUREGATEE.git
+
+]
+---
+
+## Part 1 — What I Built
+SecureGate is a focused, standalone authentication system designed to prove that identity and access management can be built correctly from scratch, without shortcuts. 
+It is made up of six core features — Sign Up, Email Verification, Login, Forgot Password, a Protected Dashboard, and Logout — each engineered with a specific security purpose.
+
+
+
+## Part 2 — What Surprised Me
+What i learned was that your schema.prisma must match your .env files in other to deploy to vercel.
+
+The one thing that was harder was deploying to vercel
+
+
+## Part 3 — Engineering Laws Quiz
+
 ### Q1 — Murphy's Law
 
 **Code reference:** 
