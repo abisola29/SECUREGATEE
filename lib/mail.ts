@@ -5,10 +5,7 @@ function getBaseUrl(): string {
     return process.env.NEXTAUTH_URL.replace(/\/$/, '')
   }
   if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
-    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-  }
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL.replace(/\/$/, '')}`
   }
   return (process.env.NEXTAUTH_URL || 'http://localhost:3000').replace(/\/$/, '')
 }
