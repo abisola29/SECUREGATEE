@@ -7,6 +7,7 @@ import { loginSchema } from '@/lib/validations/auth'
 import { rateLimit } from '@/lib/rate-limit'
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: 'jwt',
     maxAge: 30 * 60, // 30 minutes

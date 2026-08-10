@@ -42,10 +42,40 @@ export default function LoginForm(): React.ReactElement {
     }
   }, [])
 
+  const [isResending, setIsResending] = useState(false)
+  const [resendMsg, setResendMsg] = useState('')
+
+  async function handleResendVerification(): Promise<void> {
+    if (!email) {
+      setError('Please enter your email address above first.')
+      return
+    }
+    setIsResending(true)
+    setResendMsg('')
+    try {
+      const res = await fetch('/api/auth/resend-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      const data: { success: boolean; message?: string; error?: string } = await res.json()
+      if (data.success) {
+        setResendMsg(data.message ?? 'Verification link sent! Please check your inbox.')
+      } else {
+        setResendMsg(data.error ?? 'Failed to send verification link.')
+      }
+    } catch {
+      setResendMsg('Something went wrong. Please try again later.')
+    } finally {
+      setIsResending(false)
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault()
     setError('')
     setSuccess('')
+    setResendMsg('')
     setFieldErrors({})
 
     const parsed = loginSchema.safeParse({ email, password })
@@ -72,10 +102,10 @@ export default function LoginForm(): React.ReactElement {
       })
 
       if (result?.error) {
-        if (result.error.includes('Too many attempts') || result.error.includes('verify your email')) {
+        if (result.error.includes('Too many attempts')) {
           setError(result.error)
         } else {
-          setError('Invalid email or password.')
+          setError('Invalid email or password (or your email address has not been verified yet).')
         }
         return
       }
@@ -92,8 +122,21 @@ export default function LoginForm(): React.ReactElement {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5" id="login-form">
       {error && (
-        <div className="rounded-lg bg-red-950 border border-red-800 px-4 py-3">
+        <div className="flex flex-col gap-2 rounded-lg bg-red-950 border border-red-800 px-4 py-3">
           <p className="auth-error" role="alert" aria-live="polite">{error}</p>
+          {email && (
+            <button
+              type="button"
+              onClick={handleResendVerification}
+              disabled={isResending}
+              className="text-xs text-indigo-400 hover:text-indigo-300 underline text-left disabled:opacity-50 mt-1"
+            >
+              {isResending ? 'Sending...' : 'Haven\'t verified your email yet? Click here to resend verification link'}
+            </button>
+          )}
+          {resendMsg && (
+            <p className="text-xs text-emerald-400 mt-1" role="status">{resendMsg}</p>
+          )}
         </div>
       )}
 
